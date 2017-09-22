@@ -368,7 +368,7 @@ module.exports.help = function help () {
     console.log('             [--codeSignResourceRules=\"<resourcerules path>\"]');
     console.log('             [--developmentTeam=\"<Team ID>\"]');
     console.log('             [--provisioningProfile=\"<provisioning profile>\"]');
-    console.log('             [--exportOptions=\"<rexportoptions path>\"]');
+    console.log('             [--exportOptions=\"<exportoptions path>\"]');
     console.log('    --help                  : Displays this dialog.');
     console.log('    --debug                 : Builds project in debug mode. (Default)');
     console.log('    --release               : Builds project in release mode.');
