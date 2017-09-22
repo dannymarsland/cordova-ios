@@ -96,7 +96,7 @@ module.exports.run = function (buildOpts) {
             var buildType = buildOpts.release ? 'release' : 'debug';
             var config = buildConfig.ios[buildType];
             if (config) {
-                ['codeSignIdentity', 'codeSignResourceRules', 'provisioningProfile', 'developmentTeam', 'packageType', 'buildFlag'].forEach(
+                ['codeSignIdentity', 'codeSignResourceRules', 'provisioningProfile', 'developmentTeam', 'packageType', 'buildFlag', 'exportOptions'].forEach(
                     function (key) {
                         buildOpts[key] = buildOpts[key] || config[key];
                     });
@@ -179,21 +179,6 @@ module.exports.run = function (buildOpts) {
                 return;
             }
 
-            var exportOptions = {'compileBitcode': false, 'method': 'development'};
-
-            if (buildOpts.packageType) {
-                exportOptions.method = buildOpts.packageType;
-            }
-
-            if (buildOpts.developmentTeam) {
-                exportOptions.teamID = buildOpts.developmentTeam;
-            }
-
-            var exportOptionsPlist = plist.build(exportOptions);
-            var exportOptionsPath = path.join(projectPath, 'exportOptions.plist');
-
-            var buildOutputDir = path.join(projectPath, 'build', 'device');
-
             function checkSystemRuby () {
                 var ruby_cmd = shell.which('ruby');
 
@@ -208,6 +193,26 @@ module.exports.run = function (buildOpts) {
                 var xcodearchiveArgs = getXcodeArchiveArgs(projectName, projectPath, buildOutputDir, exportOptionsPath);
                 return spawn('xcodebuild', xcodearchiveArgs, projectPath);
             }
+
+            var exportOptionsPath = buildOpts.exportOptions || path.join(projectPath, 'exportOptions.plist');
+            var buildOutputDir = path.join(projectPath, 'build', 'device');
+
+            if (buildOpts.exportOptions) {
+                checkSystemRuby();
+                return packageArchive();
+            }
+
+            var exportOptions = {'compileBitcode': false, 'method': 'development'};
+
+            if (buildOpts.packageType) {
+                exportOptions.method = buildOpts.packageType;
+            }
+
+            if (buildOpts.developmentTeam) {
+                exportOptions.teamID = buildOpts.developmentTeam;
+            }
+
+            var exportOptionsPlist = plist.build(exportOptions);
 
             return Q.nfcall(fs.writeFile, exportOptionsPath, exportOptionsPlist, 'utf-8')
                 .then(checkSystemRuby)
@@ -363,6 +368,7 @@ module.exports.help = function help () {
     console.log('             [--codeSignResourceRules=\"<resourcerules path>\"]');
     console.log('             [--developmentTeam=\"<Team ID>\"]');
     console.log('             [--provisioningProfile=\"<provisioning profile>\"]');
+    console.log('             [--exportOptions=\"<rexportoptions path>\"]');
     console.log('    --help                  : Displays this dialog.');
     console.log('    --debug                 : Builds project in debug mode. (Default)');
     console.log('    --release               : Builds project in release mode.');
@@ -377,6 +383,7 @@ module.exports.help = function help () {
     console.log('    --developmentTeam       : New for Xcode 8. The development team (Team ID)');
     console.log('                              to use for code signing.');
     console.log('    --provisioningProfile   : UUID of the profile.');
+    console.log('    --exportOptions         : Path to ExportOptions.plist.');
     console.log('    --device --noSign       : Builds project without application signing.');
     console.log('');
     console.log('examples:');
